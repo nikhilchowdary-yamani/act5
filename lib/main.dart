@@ -14,18 +14,32 @@ class DigitalPetApp extends StatefulWidget {
 }
 
 class _DigitalPetAppState extends State<DigitalPetApp> {
-  String petName = "Your Pet";
+  String petName = "Balayya";
   int happinessLevel = 50;
   int hungerLevel = 50;
+  String moodIndicator = "Neutral";
+  IconData moodIcon = Icons.sentiment_satisfied_alt;
 
   // Determine pet color based on happiness level
   Color get petColor {
     if (happinessLevel > 70) {
-      return Colors.green; // Happy
+      setState(() {
+        moodIndicator = "Happy";
+        moodIcon = Icons.sentiment_satisfied_alt;
+      });
+      return Colors.green;
     } else if (happinessLevel >= 30) {
-      return Colors.yellow; // Neutral
+      setState(() {
+        moodIndicator = "Neutral";
+        moodIcon = Icons.sentiment_satisfied;
+      });
+      return Colors.yellow;
     } else {
-      return Colors.red; // Unhappy
+      setState(() {
+        moodIndicator = "Unhappy";
+        moodIcon = Icons.sentiment_very_dissatisfied;
+      });
+      return Colors.red;
     }
   }
 
@@ -86,7 +100,24 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
                 shape: BoxShape.circle,
               ),
             ),
-
+            SizedBox(height: 20,),
+            Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly, 
+            children: [
+              Text(
+                  moodIndicator,
+                  style: TextStyle(
+                    fontSize: 30,
+                    color: petColor,
+                  ),
+                ),
+              Icon(
+                moodIcon,
+                color: petColor,
+                size: 30,
+              ),
+            ],
+          ),
             const SizedBox(height: 16.0),
             Text('Happiness Level: $happinessLevel',
                 style: const TextStyle(fontSize: 20.0)),
