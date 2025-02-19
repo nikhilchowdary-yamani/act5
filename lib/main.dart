@@ -1,5 +1,6 @@
 // Nikhil Chowdary Yamani
 // Bharath Kumar Ashapu
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -23,6 +24,19 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   IconData moodIcon = Icons.sentiment_satisfied_alt;
   bool isNameSet = false;
   final TextEditingController _nameController = TextEditingController();
+  late Timer _hungerTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startHungerTimer();
+  }
+
+  @override
+  void dispose() {
+    _hungerTimer.cancel();
+    super.dispose();
+  }
 
   // Determine pet color based on happiness level
   Color get petColor {
@@ -93,6 +107,20 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
         isNameSet = true;
       });
     }
+  }
+
+  // Start a Timer that increases hunger every 30 seconds
+  void _startHungerTimer() {
+    _hungerTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      setState(() {
+        hungerLevel = (hungerLevel + 5).clamp(0, 100);
+        if (hungerLevel > 100) {
+          hungerLevel = 100;
+          happinessLevel = (happinessLevel - 20).clamp(0, 100);
+        }
+        _updateMood();
+      });
+    });
   }
 
   @override
