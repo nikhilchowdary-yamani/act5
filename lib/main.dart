@@ -18,6 +18,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   String petName = "";
   int happinessLevel = 50;
   int hungerLevel = 50;
+  int energyLevel = 50; // New energy level variable
   String moodIndicator = "Neutral";
   IconData moodIcon = Icons.sentiment_satisfied_alt;
   bool isNameSet = false;
@@ -26,6 +27,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   final TextEditingController _nameController = TextEditingController();
   late Timer _hungerTimer;
   Timer? _winTimer;
+  String selectedActivity = 'Play'; // Default activity
 
   @override
   void initState() {
@@ -75,38 +77,29 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     });
   }
 
-  // Function to increase happiness and update hunger when playing with the pet
-  void _playWithPet() {
-    setState(() {
-      happinessLevel = (happinessLevel + 10).clamp(0, 100);
-      _updateHunger();
-      _updateMood();
-    });
-  }
-
-  // Function to decrease hunger and update happiness when feeding the pet
-  void _feedPet() {
-    setState(() {
-      hungerLevel = (hungerLevel - 10).clamp(0, 100);
-      _updateHappiness();
-      _updateMood();
-    });
-  }
-
-  // Update happiness based on hunger level
-  void _updateHappiness() {
-    happinessLevel = (hungerLevel < 30)
-        ? (happinessLevel - 20).clamp(0, 100)
-        : (happinessLevel + 10).clamp(0, 100);
-  }
-
-  // Increase hunger level slightly when playing with the pet
-  void _updateHunger() {
-    hungerLevel = (hungerLevel + 5).clamp(0, 100);
-    if (hungerLevel >= 100) {
-      hungerLevel = 100;
-      happinessLevel = (happinessLevel - 20).clamp(0, 100);
+  // Function to perform the selected activity
+  void _performActivity() {
+    switch (selectedActivity) {
+      case 'Play':
+        setState(() {
+          happinessLevel = (happinessLevel + 10).clamp(0, 100);
+          energyLevel = (energyLevel - 20).clamp(0, 100);
+        });
+        break;
+      case 'Feed':
+        setState(() {
+          hungerLevel = (hungerLevel - 10).clamp(0, 100);
+          happinessLevel = (happinessLevel + 10).clamp(0, 100);
+          energyLevel = (energyLevel + 5).clamp(0, 100);
+        });
+        break;
+      case 'Rest':
+        setState(() {
+          energyLevel = (energyLevel + 20).clamp(0, 100);
+        });
+        break;
     }
+    _updateMood();
   }
 
   // Set the pet name and proceed to the main UI
@@ -166,6 +159,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     setState(() {
       happinessLevel = 50;
       hungerLevel = 50;
+      energyLevel = 50;
       gameOver = false;
       gameWon = false;
       _cancelWinTimer();
@@ -246,11 +240,40 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
         const SizedBox(height: 16.0),
         Text('Happiness Level: $happinessLevel', style: const TextStyle(fontSize: 20.0)),
         Text('Hunger Level: $hungerLevel', style: const TextStyle(fontSize: 20.0)),
+        Text('Energy Level: $energyLevel', style: const TextStyle(fontSize: 20.0)), // Energy level display
+
+        const SizedBox(height: 16.0),
+
+        LinearProgressIndicator(
+          value: energyLevel / 100, // Energy progress bar
+          backgroundColor: Colors.grey,
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+        ),
+
         const SizedBox(height: 32.0),
 
-        ElevatedButton(onPressed: _playWithPet, child: const Text('Play with Your Pet')),
+        // Activity Selection Dropdown
+        DropdownButton<String>(
+          value: selectedActivity,
+          items: <String>['Play', 'Feed', 'Rest']
+              .map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+            );
+          }).toList(),
+          onChanged: (String? newValue) {
+            setState(() {
+              selectedActivity = newValue!;
+            });
+          },
+        ),
+
         const SizedBox(height: 16.0),
-        ElevatedButton(onPressed: _feedPet, child: const Text('Feed Your Pet')),
+        ElevatedButton(
+          onPressed: _performActivity,
+          child: const Text('Perform Activity'),
+        ),
       ],
     );
   }
