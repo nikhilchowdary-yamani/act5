@@ -1,3 +1,5 @@
+// Nikhil Chowdary Yamani
+// Bharath Kumar Ashapu
 import 'package:flutter/material.dart';
 
 void main() {
@@ -14,33 +16,39 @@ class DigitalPetApp extends StatefulWidget {
 }
 
 class _DigitalPetAppState extends State<DigitalPetApp> {
-  String petName = "Balayya";
+  String petName = "";
   int happinessLevel = 50;
   int hungerLevel = 50;
   String moodIndicator = "Neutral";
   IconData moodIcon = Icons.sentiment_satisfied_alt;
+  bool isNameSet = false;
+  final TextEditingController _nameController = TextEditingController();
 
   // Determine pet color based on happiness level
   Color get petColor {
     if (happinessLevel > 70) {
-      setState(() {
+      return Colors.green; // Happy
+    } else if (happinessLevel >= 30) {
+      return Colors.yellow; // Neutral
+    } else {
+      return Colors.red; // Unhappy
+    }
+  }
+
+  // Update mood indicator and icon
+  void _updateMood() {
+    setState(() {
+      if (happinessLevel > 70) {
         moodIndicator = "Happy";
         moodIcon = Icons.sentiment_satisfied_alt;
-      });
-      return Colors.green;
-    } else if (happinessLevel >= 30) {
-      setState(() {
+      } else if (happinessLevel >= 30) {
         moodIndicator = "Neutral";
         moodIcon = Icons.sentiment_satisfied;
-      });
-      return Colors.yellow;
-    } else {
-      setState(() {
+      } else {
         moodIndicator = "Unhappy";
         moodIcon = Icons.sentiment_very_dissatisfied;
-      });
-      return Colors.red;
-    }
+      }
+    });
   }
 
   // Function to increase happiness and update hunger when playing with the pet
@@ -48,6 +56,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     setState(() {
       happinessLevel = (happinessLevel + 10).clamp(0, 100);
       _updateHunger();
+      _updateMood();
     });
   }
 
@@ -56,27 +65,34 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     setState(() {
       hungerLevel = (hungerLevel - 10).clamp(0, 100);
       _updateHappiness();
+      _updateMood();
     });
   }
 
   // Update happiness based on hunger level
   void _updateHappiness() {
-    setState(() {
-      happinessLevel = (hungerLevel < 30)
-          ? (happinessLevel - 20).clamp(0, 100)
-          : (happinessLevel + 10).clamp(0, 100);
-    });
+    happinessLevel = (hungerLevel < 30)
+        ? (happinessLevel - 20).clamp(0, 100)
+        : (happinessLevel + 10).clamp(0, 100);
   }
 
   // Increase hunger level slightly when playing with the pet
   void _updateHunger() {
-    setState(() {
-      hungerLevel = (hungerLevel + 5).clamp(0, 100);
-      if (hungerLevel > 100) {
-        hungerLevel = 100;
-        happinessLevel = (happinessLevel - 20).clamp(0, 100);
-      }
-    });
+    hungerLevel = (hungerLevel + 5).clamp(0, 100);
+    if (hungerLevel > 100) {
+      hungerLevel = 100;
+      happinessLevel = (happinessLevel - 20).clamp(0, 100);
+    }
+  }
+
+  // Set the pet name and proceed to the main UI
+  void _setPetName() {
+    if (_nameController.text.trim().isNotEmpty) {
+      setState(() {
+        petName = _nameController.text.trim();
+        isNameSet = true;
+      });
+    }
   }
 
   @override
@@ -84,61 +100,101 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     return Scaffold(
       appBar: AppBar(title: const Text('Digital Pet')),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('Name: $petName', style: const TextStyle(fontSize: 20.0)),
-            const SizedBox(height: 16.0),
+        child: isNameSet
+            ? _buildPetUI()
+            : _buildNameInputScreen(), // Show name input first
+      ),
+    );
+  }
 
-            // Pet Representation as a Circle with Dynamic Color
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 500),
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: petColor,
-                shape: BoxShape.circle,
-              ),
+  // UI for setting the pet's name
+  Widget _buildNameInputScreen() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Text(
+          "Enter your pet's name:",
+          style: TextStyle(fontSize: 20),
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: TextField(
+            controller: _nameController,
+            textAlign: TextAlign.center,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: "Pet's Name",
             ),
-            SizedBox(height: 20,),
-            Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly, 
-            children: [
-              Text(
-                  moodIndicator,
-                  style: TextStyle(
-                    fontSize: 30,
-                    color: petColor,
-                  ),
-                ),
-              Icon(
-                moodIcon,
-                color: petColor,
-                size: 30,
-              ),
-            ],
           ),
-            const SizedBox(height: 16.0),
-            Text('Happiness Level: $happinessLevel',
-                style: const TextStyle(fontSize: 20.0)),
-            const SizedBox(height: 16.0),
-            Text('Hunger Level: $hungerLevel',
-                style: const TextStyle(fontSize: 20.0)),
-            const SizedBox(height: 32.0),
+        ),
+        const SizedBox(height: 16),
+        ElevatedButton(
+          onPressed: _setPetName,
+          child: const Text("Set Name"),
+        ),
+      ],
+    );
+  }
 
-            // Play and Feed Buttons
-            ElevatedButton(
-              onPressed: _playWithPet,
-              child: const Text('Play with Your Pet'),
+  // Main Pet UI
+  Widget _buildPetUI() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: <Widget>[
+        Text('Name: $petName', style: const TextStyle(fontSize: 20.0)),
+        const SizedBox(height: 16.0),
+
+        // Pet Representation as a Circle with Dynamic Color
+        AnimatedContainer(
+          duration: const Duration(milliseconds: 500),
+          width: 100,
+          height: 100,
+          decoration: BoxDecoration(
+            color: petColor,
+            shape: BoxShape.circle,
+          ),
+        ),
+
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              moodIndicator,
+              style: TextStyle(
+                fontSize: 30,
+                color: petColor,
+              ),
             ),
-            const SizedBox(height: 16.0),
-            ElevatedButton(
-              onPressed: _feedPet,
-              child: const Text('Feed Your Pet'),
+            const SizedBox(width: 10),
+            Icon(
+              moodIcon,
+              color: petColor,
+              size: 30,
             ),
           ],
         ),
-      ),
+
+        const SizedBox(height: 16.0),
+        Text('Happiness Level: $happinessLevel',
+            style: const TextStyle(fontSize: 20.0)),
+        const SizedBox(height: 16.0),
+        Text('Hunger Level: $hungerLevel',
+            style: const TextStyle(fontSize: 20.0)),
+        const SizedBox(height: 32.0),
+
+        // Play and Feed Buttons
+        ElevatedButton(
+          onPressed: _playWithPet,
+          child: const Text('Play with Your Pet'),
+        ),
+        const SizedBox(height: 16.0),
+        ElevatedButton(
+          onPressed: _feedPet,
+          child: const Text('Feed Your Pet'),
+        ),
+      ],
     );
   }
 }
